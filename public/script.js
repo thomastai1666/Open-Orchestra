@@ -3,6 +3,7 @@
 
 // Shim by Paul Irish
 // http://paulirish.com/2011/requestanimationframe-for-smart-animating/
+
       window.requestAnimFrame = (function() {
         return  window.requestAnimationFrame ||
                 window.webkitRequestAnimationFrame ||
@@ -56,6 +57,8 @@
       
       _self.dragging = false;
       _self.limit = false;
+      _self.isHoveringOverString = false;
+      _self.hoveringString = null;
       
       window.addEventListener('resize', function() {
         _self.position();
@@ -69,13 +72,35 @@
         var x = e.clientX - _self.positionTop,
             y = e.clientY - _self.positionLeft;
     
+        _self.isHoveringOverString = false;
         _self.hitZones.forEach(function(zone) {
-            _self.checkPoint(x, y, zone);
+            if(_self.checkPoint(x, y, zone)){
+              _self.isHoveringOverString = true;
+              _self.hoveringString = zone;
+            }
         });
+
+        // console.log(_self.isHoveringOverString);
+        if(_self.isHoveringOverString){
+          document.getElementById("stage").style.cursor = "pointer";
+        }
+        else{
+          document.getElementById("stage").style.cursor = "default";
+        }
     
         _self.dragging = true;
-        _self.prev = [x, y];
+        if(!_self.prev){
+          _self.prev = [x, y];
+        }
+        
       }, false);
+
+      document.addEventListener("click", function(e){
+        if(_self.isHoveringOverString && _self.hoveringString){
+          _self.hoveringString.string.strum();
+          instrument.playNote(_self.hoveringString);
+        }
+      });
       
       
       document.addEventListener('mousemove', function(e) {
@@ -158,21 +183,26 @@
     
     Stage.prototype.checkPoint = function(x, y, zone) {
       if(zone.inside(x, y)) {
-        console.log(x,y);
-        zone.string.strum();
+        // zone.string.strum();
+        return true;
+      }
+      else{
+        // console.log(zone,x,y);
+        return false;
       }
     };  
     
     Stage.prototype.checkIntercept = function(x1, y1, x2, y2, zone) {
        if(zone.intercept(x1, y1, x2, y2)) {
-        console.log("INTERCEPTED!");
+        // console.log("Intercept Called")
         zone.string.strum();
        }
-       console.log(zone, x1,y1,x2,y2);
+      //  console.log(zone, x1,y1,x2,y2);
      }; 
 
     
-    function Rect(x, y, width, height) {
+    function Rect(i, x, y, width, height) {
+      this.stringnum = i;
       this.x = x;
       this.y = y;
       this.width = width;
@@ -182,7 +212,7 @@
     }
     
     Rect.prototype.inside = function(x,y) {
-      return x >= this.x && y >= this.y
+      return x >= this.x && y >= (this.y - this.height * 3)
           && x <= this.x + this.width
           && y <= this.y + this.height;
     };
@@ -202,7 +232,17 @@
               segment = this.midLine(),
               start = {x: x1, y: y1},
               end = {x: x2, y: y2};
+      if(this.intersectLine(segment[0], segment[1], start, end)){
+        // console.log(this, segment[0], segment[1], start, end);
+        instrument.playNote(this);
+      }
+      if(this.inside(x1,y1)){
+        // console.log('Did not intercept, debug info:');
+        // console.log(segment[0], segment[1], start, end);
+        // console.log('end <--');
+      }
       
+      // console.log(this.intersectLine(segment[0], segment[1], start, end));
       return this.intersectLine(segment[0], segment[1], start, end);
     };
     
@@ -246,9 +286,9 @@
     }
     
     GuitarString.prototype.strum = function() {
-      this._strumForce = 5;
+      this._strumForce = 8;
     //   document.getElementById('audiotag1').play();
-
+      // console.log("Strum called");
     };
     
     GuitarString.prototype.render = function(ctx, canvas) {
@@ -262,7 +302,7 @@
               this.x + this.width, this.y);
       ctx.stroke();
       
-      this._strumForce *= 0.99;
+      this._strumForce *= 0.95;
       this.a += 0.5;
     };
     
@@ -273,7 +313,6 @@
         this.stage = new Stage(stageID);
         this.ctx = this.canvas.getContext('2d');
         this.stringNum = stringNum;
-    
         this.create();
         this.render();
     
@@ -282,7 +321,7 @@
     
     StringInstrument.prototype.create = function() {
       for (var i = 0; i < this.stringNum; i++) {
-        var srect = new Rect(10, 90 + i * 75, window.innerWidth * 0.8, 5);
+        var srect = new Rect(i, 10, 90 + i * 75, window.innerWidth * 0.8, 5);
         var s = new GuitarString(srect);
         this.stage.addString(srect, s);
         this.strings.push(s);
@@ -304,7 +343,135 @@
       }
     };
     
-    
-    var guitar = new StringInstrument("stage", "strings", 4);
+    function Instrument() {
+      //Samples from London Philaharmonic
+      this.violinPlayer = new Tone.Sampler(
+        {
+          "A4" : "samples/violin-a4.mp3" //Unknown lol
+        }
+      );
+      this.violaPlayer = new Tone.Sampler(
+        {
+          "D4" : "samples/viola-d4.mp3" //viola_D4_05_mezzo-piano_arco-normal
+        }
+      );
+      this.celloPlayer = new Tone.Sampler(
+        {
+          "D3" : "samples/cello-d3.mp3", //cello_D3_15_fortissimo_arco-normal
+          "D4" : "samples/cello-d4.mp3" //cello_D3_15_fortissimo_arco-normal
+        }
+      );
+      this.bassPlayer = new Tone.Sampler(
+        {
+          "D2" : "samples/bass-d2.mp3", //double-bass_D2_15_forte_arco-normal
+          "D3" : "samples/bass-d3.mp3" //double-bass_D3_15_forte_arco-normal
+        }
+      );
+      //TODO: scales don't seem quite right
+      this.violinScale = ["A4", "B4", "C4", "D4", "E4", "F4", "G4", "A5"];
+      this.violaScale = ["D4", "E4", "F4", "G4", "A5", "B5", "C5", "D5"];
+      this.celloScale = ["D3", "E3", "F3", "G3", "A4", "B4", "C4", "D4"];
+      this.bassScale = ["D2", "E2", "F2", "G2", "A3", "B3", "C3", "D3"];
+      this.currentScale = this.violinScale;
+      this.currentPlayer = this.violinPlayer;
+      this.initialize();
+      this.muted = false;
+      return this;
+    }
 
+    Instrument.prototype.initialize = function(){
+      this.violinPlayer.toMaster();
+      this.violaPlayer.toMaster();
+      this.celloPlayer.toMaster();
+      this.bassPlayer.toMaster();
+    }
+
+    Instrument.prototype.changeInstrument = function(name){
+      console.log("Changed Instrument to " + name);
+      if(name == "Violin"){
+        this.currentScale = this.violinScale;
+        this.currentPlayer = this.violinPlayer;
+        $("#clefimage").css({"top": "-40px",
+        "height": "150%"});
+        $("#clefimage").attr("src", "img/trebleclef.png");
+      }
+      else if(name == "Viola"){
+        this.currentScale = this.violaScale;
+        this.currentPlayer = this.violaPlayer;
+        $("#clefimage").css({"top": "0px",
+        "height": "100%"});
+        $("#clefimage").attr("src", "img/tenorclef.png");
+      }
+      else if(name == "Cello"){
+        this.currentScale = this.celloScale;
+        this.currentPlayer = this.celloPlayer;
+        $("#clefimage").css({"top": "0px",
+        "height": "100%"});
+        $("#clefimage").css("top", "-75px");
+        $("#clefimage").attr("src", "img/tenorclef.png");
+      }
+      else if(name == "Bass"){
+        this.currentScale = this.bassScale;
+        this.currentPlayer = this.bassPlayer;
+        $("#clefimage").css({"top": "40px",
+        "height": "75%"});
+        $("#clefimage").attr("src", "img/bassclef.png");
+      }
+      else{
+        console.log(name + " Instrument Not Found! ");
+      }
+    }
+
+    Instrument.prototype.playNote = function(zone){
+      if(this.currentPlayer.loaded){
+        if(zone.stringnum == 0){
+          this.currentPlayer.triggerAttackRelease(this.currentScale[0], 1);
+        }
+        if(zone.stringnum == 1){
+          this.currentPlayer.triggerAttackRelease(this.currentScale[2], 1);
+        }
+        if(zone.stringnum == 2){
+          this.currentPlayer.triggerAttackRelease(this.currentScale[4], 1);
+        }
+        if(zone.stringnum == 3){
+          this.currentPlayer.triggerAttackRelease(this.currentScale[6], 1);
+        }
+      }
+
+      Instrument.prototype.toggleMute = function(){
+        if(this.muted){
+          Tone.Master.mute = true;
+          $("#muteButtonIcon").attr("class", "fas fa-volume-up");
+        }
+        else{
+          Tone.Master.mute = false;
+          $("#muteButtonIcon").attr("class", "fas fa-volume-mute");
+        }
+        this.muted = !this.muted
+      }
+    }
+    
+    
+    // Connect the player output to the computer's audio output
+    
+    
+    //Create new string object
+    var strings = new StringInstrument("stage", "strings", 4);
+
+    //Create new instrument object
+    var instrument = new Instrument();
+
+    //Initialize as Violin
+    instrument.changeInstrument("Violin");
+
+    //hack for responsive design - refresh page 
     window.onresize = function(){ location.reload(); }
+
+    //check for select menu changes
+    $('.dropdown-item').click(function() {
+      instrument.changeInstrument($(this).text());
+    });
+
+    $('#muteButton').click(function() {
+      instrument.toggleMute();
+    });

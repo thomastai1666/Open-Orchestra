@@ -6,6 +6,7 @@
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
     <script src="https://kit.fontawesome.com/77ae3a269e.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/13.0.1/Tone.min.js" type="text/javascript"></script>
     <link rel="stylesheet" href="style.css">
   </head>
   <body>
@@ -13,9 +14,9 @@
       <div class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2">
         <div class="dropdown">
           <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            Instruments
+            Pick Instrument
           </button>
-          <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+          <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" id="instrumentPicker">
             <a class="dropdown-item" href="#">Violin</a>
             <a class="dropdown-item" href="#">Viola</a>
             <a class="dropdown-item" href="#">Cello</a>
@@ -36,14 +37,17 @@
                   <i class="fas fa-users"></i>
                 </a>
               </li>
-              <li class="nav-item">
+              <li class="nav-item" id="muteButton">
                 <a href="#">
-                  <i class="fas fa-volume-mute"></i>
+                  <i class="fas fa-volume-mute" id="muteButtonIcon"></i>
                 </a>
               </li>
           </ul>
       </div>
   </nav>
+  <div id="clef">
+    <img src="img/trebleclef.png" id="clefimage" alt="">
+  </div>
   <div id="wrapper">
     <div id="stage"></div>
     <div id="plate"></div>
