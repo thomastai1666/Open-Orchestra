@@ -1,4 +1,4 @@
-// Strings Code from Google Experiments, 2012 
+// Guitar Strings Code from Google, 2012 
 // https://experiments.withgoogle.com/jam-with-chrome
 
 // Shim by Paul Irish
@@ -372,6 +372,9 @@
       this.violaScale = ["D4", "E4", "F4", "G4", "A5", "B5", "C5", "D5"];
       this.celloScale = ["D3", "E3", "F3", "G3", "A4", "B4", "C4", "D4"];
       this.bassScale = ["D2", "E2", "F2", "G2", "A3", "B3", "C3", "D3"];
+      this.violinPlayer.volume.value = 15;
+      this.bassPlayer.volume.value = -5;
+      this.currentInstrument = "Violin";
       this.currentScale = this.violinScale;
       this.currentPlayer = this.violinPlayer;
       this.initialize();
@@ -391,6 +394,7 @@
       if(name == "Violin"){
         this.currentScale = this.violinScale;
         this.currentPlayer = this.violinPlayer;
+        this.currentInstrument = "Violin";
         $("#clefimage").css({"top": "-40px",
         "height": "150%"});
         $("#clefimage").attr("src", "img/trebleclef.png");
@@ -398,6 +402,7 @@
       else if(name == "Viola"){
         this.currentScale = this.violaScale;
         this.currentPlayer = this.violaPlayer;
+        this.currentInstrument = "Viola";
         $("#clefimage").css({"top": "0px",
         "height": "100%"});
         $("#clefimage").attr("src", "img/tenorclef.png");
@@ -405,6 +410,7 @@
       else if(name == "Cello"){
         this.currentScale = this.celloScale;
         this.currentPlayer = this.celloPlayer;
+        this.currentInstrument = "Cello";
         $("#clefimage").css({"top": "0px",
         "height": "100%"});
         $("#clefimage").css("top", "-75px");
@@ -413,6 +419,7 @@
       else if(name == "Bass"){
         this.currentScale = this.bassScale;
         this.currentPlayer = this.bassPlayer;
+        this.currentInstrument = "Bass";
         $("#clefimage").css({"top": "40px",
         "height": "75%"});
         $("#clefimage").attr("src", "img/bassclef.png");
@@ -436,6 +443,8 @@
         if(zone.stringnum == 3){
           this.currentPlayer.triggerAttackRelease(this.currentScale[6], 1);
         }
+        this.showNote("#9013FE");
+        this.sendData(this.currentInstrument,zone.stringnum);
       }
 
       Instrument.prototype.toggleMute = function(){
@@ -448,12 +457,89 @@
           $("#muteButtonIcon").attr("class", "fas fa-volume-mute");
         }
         this.muted = !this.muted
+        }
       }
-    }
+
+      Instrument.prototype.showNote = function(color){
+        const val = Math.floor(Math.random() * 6) + 1;
+        console.log(val);
+        const val2 = Math.floor(Math.random() * 8);
+        var randomselection = ["&#9835;", "&#9833;", "&#9834;", "&#9836;", "&#9835;&#9833;", "&#9833;&#9834;", "&#9834;&#9835", "&#9835;&#9834",];
+        var node = document.getElementsByClassName('notes')[0];
+        var divnode = document.createElement('div');
+        divnode.innerHTML = randomselection[val2];
+        divnode.setAttribute('class', 'note' + val);
+        const randomleftpos = Math.floor(Math.random() * 90);
+        // var colors = ["#ED5314", "#FFB92A", "#FEEB51", "#9BCA3E", "#9013FE"];
+        // const randomcolor = Math.floor(Math.random() * colors.length);
+        divnode.style.left = randomleftpos + "%";
+        divnode.style.bottom = 0 + "px";
+        divnode.style.color = color;
+        node.appendChild(divnode);
+        setTimeout(function(){
+          divnode.remove();
+        }, 3000);
+      }
+
+      Instrument.prototype.sendData = function(instrument, noteVal){
+        socket.emit('chat message', [instrument, noteVal]);
+      }
+
+
+      Instrument.prototype.receiveData = function(array){
+        // socket.emit('chat message', [instrument, noteVal]);
+        //Red, Orange, Yellow, Green, Purple
+        var colors = ["#ED5314", "#FFB92A", "#FEEB51", "#9BCA3E", "#9013FE"];
+        var instrument = array[0];
+        var noteVal = array[1];
+        console.log(array[0], array[1]);
+        var receivedScale;
+        var receivedPlayer;
+        var receivedColor;
+        if(instrument == "Violin"){
+          receivedScale = this.violinScale;
+          receivedPlayer = this.violinPlayer;
+          receivedColor = colors[2];
+        }
+        else if(instrument == "Viola"){
+          receivedScale = this.violaScale;
+          receivedPlayer = this.violaPlayer;
+          receivedColor = colors[3];
+        }
+        else if(instrument == "Cello"){
+          treceivedScale = this.celloScale;
+          treceivedPlayer = this.celloPlayer;
+          receivedColor = colors[1];
+        }
+        else if(instrument == "Bass"){
+          receivedScale = this.bassScale;
+          receivedPlayer = this.bassPlayer;
+          receivedColor = colors[0];
+        }
+        else{
+          console.log(name + " Instrument Not Found! ");
+          return;
+        }
+
+        if(noteVal == 0){
+          receivedPlayer.triggerAttackRelease(receivedScale[0], 1);
+        }
+        if(noteVal == 1){
+          receivedPlayer.triggerAttackRelease(receivedScale[2], 1);
+        }
+        if(noteVal == 2){
+          receivedPlayer.triggerAttackRelease(receivedScale[4], 1);
+        }
+        if(noteVal == 3){
+          receivedPlayer.triggerAttackRelease(receivedScale[6], 1);
+        }
+
+        this.showNote(receivedColor);
+      }
     
     
-    // Connect the player output to the computer's audio output
-    
+    // Create new websocket using socket.io
+    var socket = io();
     
     //Create new string object
     var strings = new StringInstrument("stage", "strings", 4);
@@ -464,7 +550,7 @@
     //Initialize as Violin
     instrument.changeInstrument("Violin");
 
-    //hack for responsive design - refresh page 
+    //Temporary hack for responsive design - refresh page 
     window.onresize = function(){ location.reload(); }
 
     //check for select menu changes
@@ -472,6 +558,19 @@
       instrument.changeInstrument($(this).text());
     });
 
+    //Toggle Mute
     $('#muteButton').click(function() {
       instrument.toggleMute();
+    });
+
+    // $('#questionButton').click(function() {
+    //   console.log("Test");
+    //   $('#infoModal').modal('show');
+    // });
+
+    //Received Data from other clients
+    socket.on('chat message', function(msg){
+      if(msg){
+        instrument.receiveData(msg);
+      }
     });

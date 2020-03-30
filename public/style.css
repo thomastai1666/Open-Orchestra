@@ -126,3 +126,48 @@
 position: absolute;
   height: 100%;
 }
+
+.notes {
+    display: block;
+    margin: auto;
+    position: absolute;
+    width: 70%;
+    margin-left: 20%;
+    margin-right: 10%;
+    min-width: 300px;
+    height: 300px;
+    border: 0px solid #000;
+    overflow-x: hidden;
+  }
+  
+  .note1,
+  .note2,
+  .note3,
+  .note4,
+  .note5,
+  .note6 {
+    position: absolute;
+    animation: notes 3s forwards linear;
+    font-size: 35px;
+    opacity: 0;
+  }
+
+  
+  @keyframes notes {
+    0% {
+      transform: scale(1) translate(0, 0);
+      opacity: 0;
+    }
+    25% {
+      opacity: 1;
+      transform: scale(1.5) translate(50%, -50%);
+    }
+    50% {
+      opacity: 0.5;
+      transform: scale(1.5) translate(100%, -100%);
+    }
+    100% {
+      transform: scale(1.5) translate(200%, -200%);
+      opacity: 0;
+    }
+  }

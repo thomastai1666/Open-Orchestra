@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>Socket.IO chat</title>
+    <title>Open Orchestra</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
@@ -32,6 +32,11 @@
       </div>
       <div class="navbar-collapse collapse w-100 order-3 dual-collapse2">
           <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+                <a href="#" data-toggle="modal" data-target="#myModal">
+                  <i class="fas fa-question" id="questionButton"></i>
+                </a>
+              </li>
               <li class="nav-item">
                 <a href="#">
                   <i class="fas fa-users"></i>
@@ -48,6 +53,20 @@
   <div id="clef">
     <img src="img/trebleclef.png" id="clefimage" alt="">
   </div>
+  <div class="notes">
+    <!-- <div class="note1">
+        &#9835; &#9833;
+      </div>
+      <div class="note2">
+        &#9833;
+      </div>
+      <div class="note3">
+        &#9834 &#9833;
+      </div>
+      <div class="note4">
+        &#9834;
+      </div> -->
+  </div>
   <div id="wrapper">
     <div id="stage"></div>
     <div id="plate"></div>
@@ -59,6 +78,30 @@
     <div class="instrument" id="instrument3"><p>Violin</p></div>
     <div class="instrument" id="instrument4"><p>Viola</p></div>
     <div class="instrument" id="instrument5"><p>You (Cello)</p></div>
+  </div>
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLongTitle">Information</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <h6>Instructions</h6>
+          <p>Click or hover your mouse over the strings to create music!</p>
+        </div>
+        <div class="modal-body">
+          <h6>Credits</h6>
+          <p>Made with Bootstrap, Node.JS, jQuery, Socket.IO, and Tone.JS</p>
+          <p>Sound files from London Philharmonic Orchestra</p>
+          <p>Guitar Javascript library from Google JAM with Chrome</p>
+          <p>Clef Images from Wikipedia</p>
+          <p>Created by Thomas Tai - <a href="https://github.com/thomastai1666/Open-Orchestra">Source Code</a></p>
+        </div>
+      </div>
+    </div>
   </div>
   <!--
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
