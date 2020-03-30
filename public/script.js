@@ -352,7 +352,8 @@
       );
       this.violaPlayer = new Tone.Sampler(
         {
-          "D4" : "samples/viola-d4.mp3" //viola_D4_05_mezzo-piano_arco-normal
+          "D4" : "samples/viola-d4.mp3", //viola_D4_05_mezzo-piano_arco-normal
+          "C3" : "samples/viola-c3.mp3"//viola_C3_1_fortissimo_arco-normal
         }
       );
       this.celloPlayer = new Tone.Sampler(
@@ -369,15 +370,16 @@
       );
       //TODO: scales don't seem quite right
       this.violinScale = ["A4", "B4", "C4", "D4", "E4", "F4", "G4", "A5"];
-      this.violaScale = ["D4", "E4", "F4", "G4", "A5", "B5", "C5", "D5"];
-      this.celloScale = ["D3", "E3", "F3", "G3", "A4", "B4", "C4", "D4"];
-      this.bassScale = ["D2", "E2", "F2", "G2", "A3", "B3", "C3", "D3"];
+      this.violaScale = ["C3", "D3", "E3", "F3", "G3", "A4", "B4", "C4"];
+      this.celloScale = ["C2", "D2", "E2", "F2", "G2", "A3", "B3", "C3"];
+      this.bassScale = ["A2", "B2", "C2", "D2", "E3", "F3", "G3", "A3"];
       this.violinPlayer.volume.value = 15;
       this.bassPlayer.volume.value = -5;
       this.currentInstrument = "Violin";
       this.currentScale = this.violinScale;
       this.currentPlayer = this.violinPlayer;
       this.initialize();
+      this.individual = false;
       this.muted = false;
       return this;
     }
@@ -447,6 +449,17 @@
         this.sendData(this.currentInstrument,zone.stringnum);
       }
 
+      Instrument.prototype.toggleIndividual = function(){
+        if(this.individual){
+          $("#usersButtonIcon").attr("class", "fas fa-users");
+        }
+        else{
+          $("#usersButtonIcon").attr("class", "fas fa-user");
+        }
+        this.individual = !this.individual
+        }
+      }
+
       Instrument.prototype.toggleMute = function(){
         if(this.muted){
           Tone.Master.mute = true;
@@ -457,7 +470,6 @@
           $("#muteButtonIcon").attr("class", "fas fa-volume-mute");
         }
         this.muted = !this.muted
-        }
       }
 
       Instrument.prototype.showNote = function(color){
@@ -496,6 +508,10 @@
         var receivedScale;
         var receivedPlayer;
         var receivedColor;
+        //individual mode turned on
+        if(this.individual){
+          return;
+        }
         if(instrument == "Violin"){
           receivedScale = this.violinScale;
           receivedPlayer = this.violinPlayer;
@@ -507,8 +523,8 @@
           receivedColor = colors[3];
         }
         else if(instrument == "Cello"){
-          treceivedScale = this.celloScale;
-          treceivedPlayer = this.celloPlayer;
+          receivedScale = this.celloScale;
+          receivedPlayer = this.celloPlayer;
           receivedColor = colors[1];
         }
         else if(instrument == "Bass"){
@@ -518,6 +534,11 @@
         }
         else{
           console.log(name + " Instrument Not Found! ");
+          return;
+        }
+
+        //make sure data was not corrupted, though unlikely
+        if(!receivedScale || !receivedPlayer || !receivedColor){
           return;
         }
 
@@ -556,11 +577,17 @@
     //check for select menu changes
     $('.dropdown-item').click(function() {
       instrument.changeInstrument($(this).text());
+      $("#instrument5text").text("Me (" + $(this).text() + ")");
     });
 
     //Toggle Mute
     $('#muteButton').click(function() {
       instrument.toggleMute();
+    });
+
+    //Toggle group/individual mode
+    $('#usersButton').click(function() {
+      instrument.toggleIndividual();
     });
 
     // $('#questionButton').click(function() {

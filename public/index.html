@@ -38,8 +38,8 @@
                 </a>
               </li>
               <li class="nav-item">
-                <a href="#">
-                  <i class="fas fa-users"></i>
+                <a href="#" id="usersButton">
+                  <i class="fas fa-users" id="usersButtonIcon"></i>
                 </a>
               </li>
               <li class="nav-item" id="muteButton">
@@ -70,16 +70,18 @@
   <div id="wrapper">
     <div id="stage"></div>
     <div id="plate"></div>
-    <canvas id="strings" width="1200px" height="400px"/>
+    <canvas id="strings" width="1200px" height="400px">
+      Canvas not supported
+    </canvas>
   </div>
   <div id="instruments">
     <div class="instrument" id="instrument1"><p>Bass</p></div>
     <div class="instrument" id="instrument2"><p>Cello</p></div>
     <div class="instrument" id="instrument3"><p>Violin</p></div>
     <div class="instrument" id="instrument4"><p>Viola</p></div>
-    <div class="instrument" id="instrument5"><p>You (Cello)</p></div>
+    <div class="instrument" id="instrument5"><p id="instrument5text">Me (Violin)</p></div>
   </div>
-  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" data-keyboard="false" data-backdrop="static">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-header">
@@ -100,47 +102,12 @@
           <p>Clef Images from Wikipedia</p>
           <p>Created by Thomas Tai - <a href="https://github.com/thomastai1666/Open-Orchestra">Source Code</a></p>
         </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-dismiss="modal">Continue</button>
+        </div>
       </div>
     </div>
   </div>
-  <!--
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarTogglerDemo03" aria-controls="navbarTogglerDemo03" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-     
-      <div class="dropdown">
-        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          Instruments
-        </button>
-        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-          <a class="dropdown-item" href="#">Violin</a>
-          <a class="dropdown-item" href="#">Viola</a>
-          <a class="dropdown-item" href="#">Cello</a>
-          <a class="dropdown-item" href="#">Bass</a>
-        </div>
-      </div>
-    
-      <div class="collapse navbar-collapse" id="navbarTogglerDemo03">
-        
-        <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
-          <li class="nav-item">
-            <a href="#">
-              <i class="fas fa-users"></i>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="#">
-              <i class="fas fa-volume-mute"></i>
-            </a>
-          </li>
-        </ul>
-      </div>
-    </nav> -->
-    <!-- <ul id="messages"></ul> -->
-    <!-- <form action="">
-      <input id="m" autocomplete="off" /><button>Send</button>
-    </form> -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
     <script>
