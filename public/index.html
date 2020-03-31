@@ -6,7 +6,6 @@
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
     <script src="https://kit.fontawesome.com/77ae3a269e.js" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/13.0.1/Tone.min.js" type="text/javascript"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@magenta/music@1.3.1"></script>
     <script src="/scripts/helpers.js" defer></script>
@@ -35,20 +34,29 @@
           </button>
       </div>
       <div class="navbar-collapse collapse w-100 order-3 dual-collapse2">
-          <ul class="navbar-nav ml-auto">
+        
+          <ul class="navbar-nav ml-auto">   
+            <span class="navbar-text" id="usercount">
+              1 Online
+             </span>         
             <li class="nav-item">
-                <a href="#" data-toggle="modal" data-target="#myModal">
+                <a href="#" data-toggle="modal" data-target="#myModal" data-toggle="tooltip" data-placement="top" title="Help">
                   <i class="fas fa-question" id="questionButton"></i>
                 </a>
               </li>
               <li class="nav-item">
-                <a href="#" id="usersButton">
-                  <i class="fas fa-users" id="usersButtonIcon"></i>
+                <a href="#" id="usersButton" alt="test" data-toggle="tooltip" data-placement="top" title="Toggle Multiplayer">
+                  <i class="fas fa-network-wired" id="usersButtonIcon"></i>
+                </a>
+              </li>
+              <li class="nav-item" >
+                <a href="#" id="robotButton" data-toggle="tooltip" data-placement="top" title="Toggle AI Mode">
+                  <i class="fas fa-robot" id="robotButtonIcon"></i>
                 </a>
               </li>
               <li class="nav-item" id="muteButton">
-                <a href="#">
-                  <i class="fas fa-volume-mute" id="muteButtonIcon"></i>
+                <a href="#" data-toggle="tooltip" data-placement="top" title="Mute output">
+                  <i class="fas fa-volume-up" id="muteButtonIcon"></i>
                 </a>
               </li>
           </ul>
@@ -96,11 +104,13 @@
         </div>
         <div class="modal-body">
           <h6>Instructions</h6>
-          <p>Click or hover your mouse over the strings to create music!</p>
+          <p>Click or drag your mouse over the strings to create music!</p>
+          <p>Toggle robot button to use scales / machine learning</p>
+          <p>Toggle the network button to see what others are playing</p>
         </div>
         <div class="modal-body">
           <h6>Credits</h6>
-          <p>Made with Bootstrap, Node.JS, jQuery, Socket.IO, and Tone.JS</p>
+          <p>Made with Node.JS, jQuery, Socket.IO, Magenta, and Tone.JS</p>
           <p>Sound files from London Philharmonic Orchestra</p>
           <p>Guitar Javascript library from Google JAM with Chrome</p>
           <p>Clef Images from Wikipedia</p>

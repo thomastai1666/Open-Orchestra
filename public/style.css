@@ -115,7 +115,7 @@
 }
 
 #clef{
-    position: fixed;
+    position: absolute;
     left: 10%;
     top: 162px;
     width: 100px;
@@ -170,4 +170,11 @@ position: absolute;
       transform: scale(1.5) translate(200%, -200%);
       opacity: 0;
     }
+  }
+
+  #usercount{
+      position: relative;
+      top: 7px;
+      right: 15px;
+      color: white;
   }

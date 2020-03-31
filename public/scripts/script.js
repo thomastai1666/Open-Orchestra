@@ -5,6 +5,13 @@
  * http://paulirish.com/2011/requestanimationframe-for-smart-animating/
  ********************************************/
 
+var mouseButtonDown = false;
+$(document).mousedown(function() {
+  mouseButtonDown = true;
+}).mouseup(function() {
+  mouseButtonDown = false;  
+});
+
 window.requestAnimFrame = (function () {
   return window.requestAnimationFrame ||
     window.webkitRequestAnimationFrame ||
@@ -99,7 +106,7 @@ Stage.prototype.listeners = function () {
   document.addEventListener("click", function (e) {
     if (_self.isHoveringOverString && _self.hoveringString) {
       _self.hoveringString.string.strum();
-      instrument.playNote(_self.hoveringString);
+      instrument.playNote(_self.hoveringString.stringnum, instrument.currentInstrument);
     }
   });
 
@@ -194,9 +201,10 @@ Stage.prototype.checkPoint = function (x, y, zone) {
 };
 
 Stage.prototype.checkIntercept = function (x1, y1, x2, y2, zone) {
-  if (zone.intercept(x1, y1, x2, y2)) {
+  if (zone.intercept(x1, y1, x2, y2) && mouseButtonDown) {
     // console.log("Intercept Called")
     zone.string.strum();
+    instrument.playNote(zone.stringnum, instrument.currentInstrument);
   }
   //  console.log(zone, x1,y1,x2,y2);
 };
@@ -235,7 +243,7 @@ Rect.prototype.intercept = function (x1, y1, x2, y2) {
     end = { x: x2, y: y2 };
   if (this.intersectLine(segment[0], segment[1], start, end)) {
     // console.log(this, segment[0], segment[1], start, end);
-    instrument.playNote(this);
+    // instrument.playNote(this.stringnum, instrument.currentInstrument);
   }
   if (this.inside(x1, y1)) {
     // console.log('Did not intercept, debug info:');
@@ -344,151 +352,12 @@ StringInstrument.prototype.render = function () {
   }
 };
 
-/********************************************
- * Instrument Object created with Tone.JS Player
- * TODO: Add Magenta to Instrument Object
- ********************************************/
-
- 
-// button mappings.
-const MAPPING_8 = { 0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7 };
-const MAPPING_4 = { 0: 0, 1: 2, 2: 5, 3: 7 };
-const BUTTONS_DEVICE = ['a', 's', 'd', 'f', 'j', 'k', 'l', ';'];
-
-let OCTAVES = 7;
-let NUM_BUTTONS = 8;
-let BUTTON_MAPPING = MAPPING_8;
-
-let keyWhitelist = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
-  15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
-  32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48,
-  49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65,
-  66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82,
-  83, 84, 85, 86, 87];
-let TEMPERATURE = getTemperature();
-
-const heldButtonToVisualData = new Map();
-
-// Which notes the pedal is sustaining.
-let sustaining = false
-let sustainingNotes = [];
-
-// const player = new Player();
-// const genie = new mm.PianoGenie(CONSTANTS.GENIE_CHECKPOINT);
-initEverything();
-
 /*************************
- * Basic UI bits
+ * Magenta Utils and helpers
  ************************/
-function initEverything() {
-  genie.initialize().then(() => {
-    console.log('🧞‍♀️ ready!');
-    document.addEventListener('keydown', onKeyDown);
-    document.addEventListener('keyup', onKeyUp);
-
-    // Slow to start up, so do a fake prediction to warm up the model.
-    const note = genie.nextFromKeyWhitelist(0, keyWhitelist, TEMPERATURE);
-    genie.resetState();
-  });
-
-  window.addEventListener('hashchange', () => TEMPERATURE = getTemperature());
-}
-
-/*************************
- * Button actions
- ************************/
-function buttonDown(button, fromKeyDown) {
-  // If we're already holding this button down, nothing new to do.
-  if (heldButtonToVisualData.has(button)) {
-    return;
-  }
-
-  console.log(button);
-  console.log(BUTTON_MAPPING[button]);
-  const note = genie.nextFromKeyWhitelist(BUTTON_MAPPING[button], keyWhitelist, TEMPERATURE);
-  const pitch = CONSTANTS.LOWEST_PIANO_KEY_MIDI_NOTE + note;
-  console.log(note, pitch);
-
-  // Hear it.
-  // player.playNoteDown(pitch, button);
-}
-
-function buttonUp(button) {
-  const el = document.getElementById(`btn${button}`);
-  if (!el)
-    return;
-  el.removeAttribute('active');
-
-  const thing = heldButtonToVisualData.get(button);
-  if (thing) {
-    // Don't see it.
-    piano.clearNote(thing.rect);
-
-    // Stop holding it down.
-    painter.stopNote(thing.noteToPaint);
-
-    // Maybe stop hearing it.
-    const pitch = CONSTANTS.LOWEST_PIANO_KEY_MIDI_NOTE + thing.note;
-    if (!sustaining) {
-      player.playNoteUp(pitch, button);
-    } else {
-      sustainingNotes.push(CONSTANTS.LOWEST_PIANO_KEY_MIDI_NOTE + thing.note);
-    }
-  }
-  heldButtonToVisualData.delete(button);
-}
-
-/*************************
- * Events
- ************************/
-function onKeyDown(event) {
-  // Keydown fires continuously and we don't want that.
-  if (event.repeat) {
-    return;
-  }
-  if (event.key === ' ') {  // sustain pedal
-    sustaining = true;
-  } else if (event.key === '0' || event.key === 'r') {
-    console.log('🧞‍♀️ resetting!');
-    genie.resetState();
-  } else {
-    const button = getButtonFromKeyCode(event.key);
-    if (button != null) {
-      buttonDown(button, true);
-    }
-  }
-}
-
-function onKeyUp(event) {
-  if (event.key === ' ') {  // sustain pedal
-    sustaining = false;
-
-    // Release everything.
-    sustainingNotes.forEach((note) => player.playNoteUp(note, -1));
-    sustainingNotes = [];
-  } else {
-    const button = getButtonFromKeyCode(event.key);
-    if (button != null) {
-      buttonUp(button);
-    }
-  }
-}
-
-/*************************
- * Utils and helpers
- ************************/
-function getButtonFromKeyCode(key) {
-  // 1 - 8
-  if (key >= '1' && key <= String(NUM_BUTTONS)) {
-    return parseInt(key) - 1;
-  }
-
-  const index = BUTTONS_DEVICE.indexOf(key);
-  return index !== -1 ? index : null;
-}
 
 function getTemperature() {
-  const hash = parseFloat(parseHashParameters()['temperature']) || 0.25;
+  const hash = parseFloat(parseHashParameters()['temperature']) || 0.3;
   const newTemp = Math.min(1, hash);
   console.log('🧞‍♀️ temperature = ', newTemp);
   return newTemp;
@@ -508,26 +377,55 @@ function parseHashParameters() {
 
 //Instrument
 
+const MAPPING_8 = { 0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7 };
+const MAPPING_4 = { 0: 0, 1: 2, 2: 5, 3: 7 };
+const BUTTONS_DEVICE = ['a', 's', 'd', 'f', 'j', 'k', 'l', ';'];
+
+let OCTAVES = 7;
+let NUM_BUTTONS = 8;
+let BUTTON_MAPPING = MAPPING_8;
+
+let completekeyWhitelist = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
+  15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+  32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48,
+  49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65,
+  66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82,
+  83, 84, 85, 86, 87];
+let keyWhitelist = [0, 2, 3, 5, 7, 8, 10, 12, 14,
+    15, 17, 19, 20, 22, 24, 26, 27, 29, 31,
+    32, 34, 36, 38, 39, 41, 43, 44, 46, 48,
+    50, 51, 53, 55, 56, 58, 60, 62, 63, 65,
+    67, 68, 70, 72, 74, 75, 77, 79, 80, 82,
+    84, 86, 87];
+let TEMPERATURE = getTemperature();
+
+const heldButtonToVisualData = new Map();
+
+// Which notes the pedal is sustaining.
+let sustaining = false
+let sustainingNotes = [];
+
+
 function Instrument() {
   //Samples from London Philaharmonic
-  this.violinPlayer = new Tone.Sampler(
+  this.violinPlayer = new mm.Player.tone.Sampler(
     {
       "A4": "samples/violin-a4.mp3" //Unknown lol
     }
   );
-  this.violaPlayer = new Tone.Sampler(
+  this.violaPlayer = new mm.Player.tone.Sampler(
     {
       "D4": "samples/viola-d4.mp3", //viola_D4_05_mezzo-piano_arco-normal
       "C3": "samples/viola-c3.mp3"//viola_C3_1_fortissimo_arco-normal
     }
   );
-  this.celloPlayer = new Tone.Sampler(
+  this.celloPlayer = new mm.Player.tone.Sampler(
     {
       "D3": "samples/cello-d3.mp3", //cello_D3_15_fortissimo_arco-normal
       "D4": "samples/cello-d4.mp3" //cello_D3_15_fortissimo_arco-normal
     }
   );
-  this.bassPlayer = new Tone.Sampler(
+  this.bassPlayer = new mm.Player.tone.Sampler(
     {
       "D2": "samples/bass-d2.mp3", //double-bass_D2_15_forte_arco-normal
       "D3": "samples/bass-d3.mp3" //double-bass_D3_15_forte_arco-normal
@@ -543,10 +441,11 @@ function Instrument() {
   this.currentInstrument = "Violin";
   this.currentScale = this.violinScale;
   this.currentPlayer = this.violinPlayer;
-  this.initialize();
   this.individual = false;
   this.muted = false;
-
+  this.robotoff = false;
+  this.genie = new mm.PianoGenie(CONSTANTS.GENIE_CHECKPOINT);
+  this.initialize();
   return this;
 }
 
@@ -555,6 +454,14 @@ Instrument.prototype.initialize = function () {
   this.violaPlayer.toMaster();
   this.celloPlayer.toMaster();
   this.bassPlayer.toMaster();
+  this.genie.initialize().then(() => {
+    console.log('🧞‍♀️ ready!');
+
+    // Slow to start up, so do a fake prediction to warm up the model.
+    const note = this.genie.nextFromKeyWhitelist(0, keyWhitelist, TEMPERATURE);
+    this.genie.resetState();
+  });
+
   window.addEventListener('hashchange', () => TEMPERATURE = getTemperature());
 }
 
@@ -606,53 +513,83 @@ Instrument.prototype.changeInstrument = function (name) {
   }
 }
 
-Instrument.prototype.playNote = function (zone) {
-  // const note = this.genie.nextFromKeyWhitelist(BUTTON_MAPPING[zone.stringnum], keyWhitelist, TEMPERATURE);
-  // const pitch = CONSTANTS.LOWEST_PIANO_KEY_MIDI_NOTE + note;
-  // console.log("Note played:", pitch);
+Instrument.prototype.playNote = function (stringNumber, instrument) {
   if (this.currentPlayer.loaded) {
-    if (zone.stringnum == 0) {
-      this.currentPlayer.triggerAttackRelease(this.currentScale[0], 1);
+    var offset = 0;
+    if(instrument == "Violin"){ offset += 4}
+    if(instrument == "Viola"){ offset += 3}
+    if(instrument == "Cello"){ offset += 1}
+    if(instrument == "Bass"){ offset += 0}
+    const note = this.genie.nextFromKeyWhitelist(BUTTON_MAPPING[(Math.abs(stringNumber - 4)+ offset - 1)], keyWhitelist, TEMPERATURE);
+    const pitch = CONSTANTS.LOWEST_PIANO_KEY_MIDI_NOTE + note;
+    var noteval = mm.Player.tone.Frequency(pitch, "midi").toNote();
+    if (this.robotoff) {
+      if(instrument == "Violin"){ noteval = this.violinScale[(Math.abs(stringNumber - 4)+ offset - 1) ] }
+      if(instrument == "Viola"){ noteval = this.violaScale[(Math.abs(stringNumber - 4)+ offset - 1) ] }
+      if(instrument == "Cello"){ noteval = this.celloScale[(Math.abs(stringNumber - 4)+ offset - 1) ]}
+      if(instrument == "Bass"){ noteval = this.bassScale[(Math.abs(stringNumber - 4)+ offset - 1) ] }
     }
-    if (zone.stringnum == 1) {
-      this.currentPlayer.triggerAttackRelease(this.currentScale[2], 1);
-    }
-    if (zone.stringnum == 2) {
-      this.currentPlayer.triggerAttackRelease(this.currentScale[4], 1);
-    }
-    if (zone.stringnum == 3) {
-      this.currentPlayer.triggerAttackRelease(this.currentScale[6], 1);
-    }
+    this.playNoteWithVal(noteval, instrument);
     this.showNote("#9013FE");
-    this.sendData(this.currentInstrument, zone.stringnum);
+    this.sendData(this.currentInstrument, noteval);
+  }
+}
+  
+  Instrument.prototype.playNoteWithVal = function(noteval, instrumentName){
+    if(instrumentName == "Violin"){ 
+      this.violinPlayer.triggerAttackRelease(noteval, 1);
+    }
+    if(instrumentName == "Viola"){
+      this.violaPlayer.triggerAttackRelease(noteval, 1);
+      }
+    if(instrumentName == "Cello"){
+      this.celloPlayer.triggerAttackRelease(noteval, 1);
+    }
+    if(instrumentName == "Bass"){
+      this.bassPlayer.triggerAttackRelease(noteval, 1);
+      }
   }
 
   Instrument.prototype.toggleIndividual = function () {
+    this.individual = !this.individual;
     if (this.individual) {
-      $("#usersButtonIcon").attr("class", "fas fa-users");
+      $("#usersButtonIcon").attr("class", "fas fa-times");
+      $("#usercount").text("Offline");
     }
     else {
-      $("#usersButtonIcon").attr("class", "fas fa-user");
+      $("#usersButtonIcon").attr("class", "fas fa-network-wired");
+      $("#usercount").text("Online");
+      socket.emit('users');
     }
-    this.individual = !this.individual
+  }
+
+
+Instrument.prototype.toggleMute = function () {
+  this.muted = !this.muted;
+  if (this.muted) {
+    mm.Player.tone.Master.mute = true;
+    console.log("Mute");
+    $("#muteButtonIcon").attr("class", "fas fa-volume-mute");
+  }
+  else {
+    mm.Player.tone.Master.mute = false;
+    $("#muteButtonIcon").attr("class", "fas fa-volume-up");
   }
 }
 
-Instrument.prototype.toggleMute = function () {
-  if (this.muted) {
-    Tone.Master.mute = true;
-    $("#muteButtonIcon").attr("class", "fas fa-volume-up");
+Instrument.prototype.toggleRobot = function () {
+  this.robotoff = !this.robotoff;
+  if (this.robotoff) {
+    console.log("AI Mode off");
+    $("#robotButtonIcon").attr("class", "fas fa-user");
   }
   else {
-    Tone.Master.mute = false;
-    $("#muteButtonIcon").attr("class", "fas fa-volume-mute");
+    $("#robotButtonIcon").attr("class", "fas fa-robot");
   }
-  this.muted = !this.muted
 }
 
 Instrument.prototype.showNote = function (color) {
   const val = Math.floor(Math.random() * 6) + 1;
-  console.log(val);
   const val2 = Math.floor(Math.random() * 8);
   var randomselection = ["&#9835;", "&#9833;", "&#9834;", "&#9836;", "&#9835;&#9833;", "&#9833;&#9834;", "&#9834;&#9835", "&#9835;&#9834",];
   var node = document.getElementsByClassName('notes')[0];
@@ -672,7 +609,10 @@ Instrument.prototype.showNote = function (color) {
 }
 
 Instrument.prototype.sendData = function (instrument, noteVal) {
-  socket.emit('chat message', [instrument, noteVal]);
+  if(!this.individual){
+    socket.emit('chat message', [instrument, noteVal]);
+    console.log("SENT DATA", instrument, noteVal);
+  }
 }
 
 
@@ -682,32 +622,22 @@ Instrument.prototype.receiveData = function (array) {
   var colors = ["#ED5314", "#FFB92A", "#FEEB51", "#9BCA3E", "#9013FE"];
   var instrument = array[0];
   var noteVal = array[1];
-  console.log(array[0], array[1]);
-  var receivedScale;
-  var receivedPlayer;
+  console.log("RECEIVED DATA", noteVal, instrument);
   var receivedColor;
   //individual mode turned on
   if (this.individual) {
     return;
   }
   if (instrument == "Violin") {
-    receivedScale = this.violinScale;
-    receivedPlayer = this.violinPlayer;
     receivedColor = colors[2];
   }
   else if (instrument == "Viola") {
-    receivedScale = this.violaScale;
-    receivedPlayer = this.violaPlayer;
     receivedColor = colors[3];
   }
   else if (instrument == "Cello") {
-    receivedScale = this.celloScale;
-    receivedPlayer = this.celloPlayer;
     receivedColor = colors[1];
   }
   else if (instrument == "Bass") {
-    receivedScale = this.bassScale;
-    receivedPlayer = this.bassPlayer;
     receivedColor = colors[0];
   }
   else {
@@ -715,24 +645,8 @@ Instrument.prototype.receiveData = function (array) {
     return;
   }
 
-  //make sure data was not corrupted, though unlikely
-  if (!receivedScale || !receivedPlayer || !receivedColor) {
-    return;
-  }
 
-  if (noteVal == 0) {
-    receivedPlayer.triggerAttackRelease(receivedScale[0], 1);
-  }
-  if (noteVal == 1) {
-    receivedPlayer.triggerAttackRelease(receivedScale[2], 1);
-  }
-  if (noteVal == 2) {
-    receivedPlayer.triggerAttackRelease(receivedScale[4], 1);
-  }
-  if (noteVal == 3) {
-    receivedPlayer.triggerAttackRelease(receivedScale[6], 1);
-  }
-
+  this.playNoteWithVal(noteVal, instrument);
   this.showNote(receivedColor);
 }
 
@@ -768,6 +682,11 @@ $('#usersButton').click(function () {
   instrument.toggleIndividual();
 });
 
+//Toggle AI/User mode
+$('#robotButton').click(function () {
+  instrument.toggleRobot();
+});
+
 // $('#questionButton').click(function() {
 //   console.log("Test");
 //   $('#infoModal').modal('show');
@@ -778,4 +697,16 @@ socket.on('chat message', function (msg) {
   if (msg) {
     instrument.receiveData(msg);
   }
+});
+
+socket.on('counter', function (users) {
+  console.log(users);
+  if(!users.isNaN && Number.isInteger(users) && !instrument.individual){
+    $("#usercount").text(users + " Online");
+  }
+});
+
+$( document ).ready(function() {
+  $('#myModal').modal('show');
+  $('#myModal').focus();
 });
